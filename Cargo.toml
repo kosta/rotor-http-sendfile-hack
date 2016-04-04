@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Konstantin Welke <konstantin.welke@citrix.com>"]
 
 [dependencies]
+libc="^0.2.9"
