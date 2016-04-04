@@ -1,7 +1,6 @@
-use std::boxed::Box;
 use std::env::args;
-use std::ops::DerefMut;
-use libc::c_int;
+use std::ffi::CString;
+use libc::{c_int, size_t};
 
 extern crate libc;
 
@@ -20,33 +19,22 @@ fn main() {
 		dst_path.replace("\"", "\\\""));
 
 	let src = open(&src_path, libc::O_RDONLY);
+	let count = std::fs::metadata(src_path).unwrap().len() as size_t;
 	let dst = open(&dst_path, libc::O_WRONLY | libc::O_EXCL | libc::O_CREAT);
-	sendfile(src, dst);
+	sendfile(src, dst, count);
 }
 
 fn open(path: &str, flags: c_int) -> c_int {
 	let ret = unsafe {
-		libc::open(path.as_ptr() as *const i8, flags)
+		libc::open(CString::new(path).unwrap().as_ptr() as *const i8, flags)
 	};
 	println!("open()ing '{}' with flags {} returned fd {}", path, flags, ret);
 	ret
 }
 
-#[cfg(target_os="macos")]
-struct Sendfile (Box<libc::off_t>);
-
-#[cfg(target_os="macos")]
-fn sendfile(src: c_int, dst: c_int) -> Sendfile {
-	println!("copying fd {} to fd {}", src, dst);
-	let mut sf = Sendfile( Box::new(0) );
+fn sendfile(src: c_int, dst: c_int, count: size_t) {
 	let result = unsafe {
-		libc::sendfile(src, 
-			dst, 
-			0, 
-			sf.0.deref_mut() as *mut libc::off_t, 
-			std::ptr::null_mut(), 
-			0)
+		libc::sendfile(dst, src, std::ptr::null_mut(), count)
 	};
 	println!("sendfile() returned {}", result);
-	sf
 }
