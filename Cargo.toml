@@ -1,0 +1,6 @@
+[package]
+name = "rotor-http-sendfile-hack"
+version = "0.1.0"
+authors = ["Konstantin Welke <konstantin.welke@citrix.com>"]
+
+[dependencies]
